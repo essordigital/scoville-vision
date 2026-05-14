@@ -86,3 +86,17 @@ available to its users.
 
 This repository is in initial scaffolding. Implementation is tracked in
 issues.
+
+## Continuous integration
+
+CI checks are exposed via the `Makefile` so they can run locally and
+from any CI system. To match what the eventual GitHub Actions workflow
+will execute:
+
+```bash
+make ci   # ruff check + pytest
+make scan # trivy image scan (requires trivy installed locally)
+```
+
+The GitHub Actions YAML workflow will be added once the deploy key /
+PAT used to push to this repository has the `workflow` OAuth scope.
