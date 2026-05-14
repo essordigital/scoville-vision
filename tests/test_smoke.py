@@ -19,14 +19,14 @@ def test_models_module_imports():
         id=0,
         bbox=[10, 10, 50, 50],
         score=0.9,
-        embedding=[0.0] * 512,
+        embedding=[0.0] * 128,
     )
     assert face.bbox == [10, 10, 50, 50]
-    assert len(face.embedding) == 512
+    assert len(face.embedding) == 128
 
 
 def test_face_embedding_size_validation():
-    """Embeddings must be exactly 512 floats."""
+    """Embeddings must be exactly 128 floats (SFace output dimension)."""
     from scoville_vision import models
 
     with pytest.raises(ValueError):

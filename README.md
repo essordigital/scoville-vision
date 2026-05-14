@@ -3,14 +3,15 @@
 Face detection and embedding microservice for the Scoville analytics platform.
 
 Stateless HTTP service that takes an image, detects faces, returns bounding
-boxes, 5-point landmarks, and 512-dimensional embeddings. Designed to be
+boxes, 5-point landmarks (when the detector returns them), and 128-dimensional
+SFace embeddings. Designed to be
 called over a private mesh network (Tailscale / WireGuard) from a downstream
 analytics worker.
 
 ## Design
 
 - **Detection**: YOLOv11-face (Ultralytics)
-- **Embedding**: SFace (OpenCV DNN, 512-dim)
+- **Embedding**: SFace (OpenCV DNN, 128-dim)
 - **Alignment**: 5-point landmarks (from YOLO output or MediaPipe fallback)
 - **Transport**: synchronous HTTP via FastAPI / Uvicorn
 - **State**: none. Images are processed in RAM and discarded after the
@@ -51,7 +52,7 @@ Output:
 ### `POST /embed`
 
 Re-embed an already-detected face crop. Input: `{ image_b64, bbox }`.
-Output: `{ embedding: [512 floats] }`.
+Output: `{ embedding: [128 floats] }`.
 
 ### `GET /health`
 

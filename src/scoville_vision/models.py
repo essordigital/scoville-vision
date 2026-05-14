@@ -26,9 +26,10 @@ class Face(BaseModel):
     )
     score: float = Field(ge=0.0, le=1.0, description="Detection confidence")
     embedding: list[float] = Field(
-        description="512-dim L2-normalized face embedding from SFace",
-        min_length=512,
-        max_length=512,
+        description="128-dim L2-normalized face embedding from SFace "
+                    "(OpenCV's face_recognition_sface_2021dec.onnx)",
+        min_length=128,
+        max_length=128,
     )
     landmarks_5pt: list[list[float]] | None = Field(
         default=None,
@@ -63,7 +64,7 @@ class EmbedRequest(BaseModel):
 
 
 class EmbedResponse(BaseModel):
-    embedding: list[float] = Field(min_length=512, max_length=512)
+    embedding: list[float] = Field(min_length=128, max_length=128)
     process_time_ms: float
 
 
