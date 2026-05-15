@@ -102,6 +102,90 @@ A reviewer who wants to verify the claims above can:
 3. Check the container image layers to confirm no debugger / telemetry
    agent is installed.
 
+## License boundary (AGPL-3.0)
+
+This service is released under the GNU Affero General Public License v3.0.
+The reason is upstream: the face detection model (Ultralytics YOLO) is
+itself AGPL, and shipping a derivative of an AGPL-licensed work requires
+the derivative to also be AGPL.
+
+The downstream system that consumes this service (the operator's
+analytics pipeline) is a **separate process** and is **not** AGPL.
+This is intentional and defensible — it is the canonical industry
+pattern for using AGPL components in a commercial product, recommended
+by Ultralytics themselves and applied by many SaaS products that build
+on AGPL inference services.
+
+### What keeps the boundary clean
+
+The operator commits to the following invariants:
+
+1. **Two separate repositories**
+   - This repository: `scoville-vision` (public, AGPL-3.0).
+   - The consumer (`scoville-scale`): private, proprietary. Never
+     mirrored or published.
+
+2. **Two separate Docker images**
+   - The two services are built and distributed as independent OCI
+     images, each retaining its own license metadata. They are never
+     bundled into a single image.
+
+3. **No source-level coupling**
+   - The consumer's source tree contains **no `import` of
+     ultralytics, scoville_vision, or any module from this repository**.
+   - The consumer has no Python dependency on `ultralytics` in its
+     `pyproject.toml` / requirements.
+   - A CI guardrail (`scripts/check_no_agpl_import.sh` in the consumer
+     repo) `grep`s the source tree on every push and fails the build
+     on any forbidden import.
+
+4. **Network-protocol-only communication**
+   - The consumer talks to this service exclusively over HTTP. The
+     wire protocol is documented above (`POST /detect`, `POST /embed`,
+     `GET /health`).
+   - The deployment topology (sidecar on the same host, talking via
+     `127.0.0.1`) does not change the legal analysis: localhost TCP
+     is still a network protocol, and the two processes are
+     independently scheduled with separate memory and PIDs.
+
+5. **Independently startable**
+   - This service runs by itself with no consumer present. The
+     consumer runs against any compliant face-detection backend that
+     exposes the same HTTP contract.
+
+6. **No mutual configuration shipped together**
+   - There is no shared `docker-compose.yml`, no shared Helm chart, no
+     installer that packages the two together for redistribution. Any
+     compose file used for development sits in a third, separate
+     scratch repository (`scoville-test`) that is not distributed.
+
+7. **Modifications to this code are released back**
+   - Per AGPL §13, any modification the operator makes to **this**
+     repository is published in the same public repository, accessible
+     to anyone interacting with the service over the network. Patches
+     are not held back as private.
+
+### Where the boundary would break
+
+For transparency, here is what the operator promises **not** to do, as
+each of these would extend AGPL obligations to the downstream code:
+
+- Import this code as a Python library in `scoville-scale`.
+- Statically or dynamically link this code into the consumer.
+- Ship a combined binary, image, or installer that includes both.
+- Re-implement parts of this codebase into the consumer's repository.
+
+The CI guardrail and license metadata in both repos exist precisely to
+make these accidents impossible.
+
+### Not legal advice
+
+This document describes the operator's understanding and good-faith
+practice. It is not legal counsel and has not been reviewed by an IP
+lawyer at the time of writing. Operators contemplating a strict
+commercial deployment are advised to obtain a 1-2h review from
+counsel familiar with the AGPL.
+
 ## Reporting an issue
 
 If you believe this service is not behaving according to this document,
